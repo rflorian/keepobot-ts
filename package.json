@@ -1,5 +1,6 @@
 {
-  "name": "keepobot-ts",
+  "name": "KeepoBot-ts",
+  "version": "0.0.1",
   "author": "rflorian",
   "license": "MIT",
   "repository": {

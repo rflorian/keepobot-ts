@@ -1,4 +1,4 @@
-export interface KeepoBotConfig {
+export interface TwitchBotConfig {
     twitch: {
         bot: {
             username: string,

@@ -1,7 +1,7 @@
-import {KeepoBotConfig} from '../api';
+import {TwitchBotConfig} from '../api';
 import {credentials} from './credentials';
 
-export const config: KeepoBotConfig = {
+export const config: TwitchBotConfig = {
     twitch: {
         bot: {
             username: credentials.twitchBotAccount.username,

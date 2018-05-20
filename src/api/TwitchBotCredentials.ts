@@ -1,4 +1,4 @@
-export interface KeepoBotCredentials {
+export interface TwitchBotCredentials {
     twitchBotAccount: {
         username: string,
         password: string

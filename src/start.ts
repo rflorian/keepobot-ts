@@ -1,16 +1,28 @@
 import {logger} from './logger';
-import {getClient} from './client';
 import {config} from './config';
+import {appNameAndVersion} from './util';
+import {TwitchJSOptions} from './api';
+import {KeepoBot} from './KeepoBot';
 
-logger.debug('Starting application');
-const client = getClient();
-
-client.on('chat', (channel, userState, message, self) => {
-    if (self) return;
-    logger.debug(`Chat message received -> ${userState['display-name']}: ${message}`);
-
-    if (message === 'Kappa') client.say(config.twitch.stream.channel, 'MrDestructoid');
-    if (message === '!stop' && userState['display-name'].toLowerCase() === config.twitch.stream.channel) {
-        client.disconnect();
+const twitchOptions: TwitchJSOptions = {
+    channels: [`#${config.twitch.stream.channel}`],
+    identity: {
+        username: config.twitch.bot.username,
+        password: config.twitch.bot.password
     }
-});
+};
+
+logger.debug(`Starting ${appNameAndVersion}`);
+const bot = new KeepoBot(twitchOptions).start();
+
+bot.addChatEvent(
+    'shutdown',
+    (message, userState) => message === '!stop' && userState.username === config.twitch.stream.channel,
+    bot => bot.say(`TFW ded after ${bot.uptime}ms FeelsBadMan :gun:`).stop()
+);
+
+bot.addChatEvent(
+    'kappa',
+    message => message === 'Kappa',
+    bot => bot.say('MrDestructoid')
+);
