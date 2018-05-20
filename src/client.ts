@@ -1,6 +1,6 @@
 import {logger} from './logger';
-import {config} from './config';
 import * as TwitchJS from 'twitch-js';
+import {config} from './config';
 
 export const getClient = (): TwitchJS.Client => {
     const twitchOptions = {
@@ -14,7 +14,10 @@ export const getClient = (): TwitchJS.Client => {
     logger.debug(`Building twitch client with options ${JSON.stringify(twitchOptions)}`);
     const client = new TwitchJS.Client(twitchOptions);
 
-    client.on('connected', () => logger.debug('Client connected'));
+    client.on('connected', () => {
+        logger.debug('Client connected');
+        client.say(config.twitch.stream.channel, 'Beep boop MrDestructoid')
+    });
     client.on('disconnected', reason => logger.debug(`Client disconnected: ${reason}`));
 
     client.connect();
