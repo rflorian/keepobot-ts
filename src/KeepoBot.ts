@@ -1,10 +1,12 @@
 import * as TwitchJS from 'twitch-js';
 import {
-    KeepoBotChatHandler,
-    KeepoBotEventHandler,
+    KeepoBotChatEvent,
     TwitchBot,
+    TwitchBotChatEventHandler,
+    TwitchBotEvent,
+    TwitchBotEventHandler,
+    TwitchBotEventTrigger,
     TwitchClient,
-    TwitchEventTrigger,
     TwitchJSOptions,
     TwitchUserState
 } from './api';
@@ -12,11 +14,17 @@ import {logger} from './logger';
 import {config} from './config';
 import {appNameAndVersion} from './util';
 
-type EventListener = {[eventId: string]: {trigger: TwitchEventTrigger, handler: KeepoBotEventHandler}};
+type KeepoBotEventListeners<T> = {
+    [id: string]: {
+        trigger: TwitchBotEventTrigger,
+        handler: T extends 'chat' ? TwitchBotChatEventHandler<KeepoBot> : TwitchBotEventHandler<KeepoBot>
+    }
+};
 
-export class KeepoBot implements TwitchBot {
+export class KeepoBot implements TwitchBot<KeepoBot> {
     private twitch: TwitchClient;
-    private chatListeners: EventListener = {};
+    private chatEventListeners: KeepoBotEventListeners<'chat'> = {};
+    private eventListeners: KeepoBotEventListeners<Exclude<string, 'chat'>> = {};
 
     private startUpTimestamp;
 
@@ -27,10 +35,6 @@ export class KeepoBot implements TwitchBot {
     constructor(private twitchOptions: TwitchJSOptions) {
         this.twitch = new TwitchJS.Client(twitchOptions);
 
-        this.twitch.on('connected', () => {
-            logger.debug('Client connected');
-            this.say(`${appNameAndVersion} ready for duty MrDestructoid`)
-        });
         this.twitch.on('disconnected', reason => logger.debug(`Client disconnected: ${reason}`));
         this.twitch.on('chat', this.handleTwitchChatEvents.bind(this));
     }
@@ -40,9 +44,9 @@ export class KeepoBot implements TwitchBot {
                                    message: string,
                                    self: boolean) {
         if (self) return;
-        logger.debug(`Chat message received -> ${userState.username}: ${message}`);
+        logger.debug(`<--- ${userState.username}: ${message}`);
 
-        Object.entries(this.chatListeners)
+        Object.entries(this.chatEventListeners)
             .filter(([id, listener]) => listener.trigger(message, userState, channel))
             .forEach(([id, listener]) => {
                 logger.trace(`Calling "${id}" handler with ${message}, ${userState}`);
@@ -51,29 +55,41 @@ export class KeepoBot implements TwitchBot {
     }
 
     start() {
-        this.twitch.connect().then(() => this.startUpTimestamp = new Date().getTime());
+        logger.trace('Client connecting');
+        this.twitch.connect().then(() => {
+            logger.debug('Client connected');
+            this.startUpTimestamp = new Date().getTime();
+            this.say(`${appNameAndVersion} ready for duty MrDestructoid`)
+        });
         return this;
     }
 
     stop() {
         this.twitch.disconnect();
+        logger.trace('Client disconnecting');
         return this;
     }
 
-    addChatEvent(id: string, trigger: TwitchEventTrigger, handler: KeepoBotChatHandler) {
-        this.chatListeners[id] = {trigger, handler};
-        logger.trace(`Added ${id} chat event`);
+    addEvent<T extends string>(event: TwitchBotEvent<this, T>) {
+        if (event instanceof KeepoBotChatEvent) {
+            this.chatEventListeners[event.id] = {trigger: event.trigger, handler: event.handler};
+        }
+        else this.eventListeners[event.id] = {trigger: event.trigger, handler: event.handler};
+        logger.trace(`Added ${event.id} chat event`);
         return this;
     }
 
-    removeChatEvent(id: string) {
-        delete this.chatListeners[id];
-        logger.trace(`Removed ${id} chat event`);
+    removeEvent<T extends string>(event: TwitchBotEvent<this, T>) {
+        if (event instanceof KeepoBotChatEvent) delete this.chatEventListeners[event.id];
+        else delete this.eventListeners[event.id];
+        logger.trace(`Removed ${event.id} chat event`);
         return this;
     }
 
+    // TODO: move to I/O unit which receives the twitch client
     say(msg: string, channel: string = config.twitch.stream.channel) {
         this.twitch.say(channel, msg);
+        logger.debug(`---> ${msg}`);
         return this;
     }
 }
