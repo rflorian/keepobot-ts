@@ -3,5 +3,5 @@ import {TwitchBotChatEventHandler, TwitchBotEventHandler, TwitchBotEventTrigger}
 export interface TwitchBotEvent<B, T extends string = 'event'> {
     id: string;
     trigger: TwitchBotEventTrigger;
-    handler: T extends 'chat' ? TwitchBotChatEventHandler<B> : TwitchBotEventHandler<B>;
+    handler: T extends 'chat' ? TwitchBotChatEventHandler<B, any> : TwitchBotEventHandler<B, any>;
 }

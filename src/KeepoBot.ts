@@ -1,11 +1,14 @@
 import * as TwitchJS from 'twitch-js';
 import {
     KeepoBotChatEvent,
+    KeepoBotCommand,
+    SayCommand, StopCommand,
     TwitchBot,
     TwitchBotChatEventHandler,
     TwitchBotEvent,
     TwitchBotEventHandler,
     TwitchBotEventTrigger,
+    TwitchBotTask,
     TwitchClient,
     TwitchJSOptions,
     TwitchUserState
@@ -13,20 +16,28 @@ import {
 import {logger} from './logger';
 import {config} from './config';
 import {appNameAndVersion} from './util';
+import {Observable, Observer, Subscription, timer} from 'rxjs';
 
 type KeepoBotEventListeners<T> = {
     [id: string]: {
         trigger: TwitchBotEventTrigger,
-        handler: T extends 'chat' ? TwitchBotChatEventHandler<KeepoBot> : TwitchBotEventHandler<KeepoBot>
+        handler: T extends 'chat' ?
+            TwitchBotChatEventHandler<KeepoBot, KeepoBotCommand> :
+            TwitchBotEventHandler<KeepoBot, KeepoBotCommand>
     }
 };
+type KeepoBotTasks = {[id: string]: Subscription};
 
 export class KeepoBot implements TwitchBot<KeepoBot> {
     private twitch: TwitchClient;
     private chatEventListeners: KeepoBotEventListeners<'chat'> = {};
     private eventListeners: KeepoBotEventListeners<Exclude<string, 'chat'>> = {};
+    private tasks: KeepoBotTasks = {};
 
     private startUpTimestamp;
+
+    private commands: Observer<any>;
+    private commands$: Observable<any>;
 
     get uptime() {
         return new Date().getTime() - this.startUpTimestamp;
@@ -34,11 +45,26 @@ export class KeepoBot implements TwitchBot<KeepoBot> {
 
     constructor(private twitchOptions: TwitchJSOptions) {
         this.twitch = new TwitchJS.Client(twitchOptions);
-
         this.twitch.on('disconnected', reason => logger.debug(`Client disconnected: ${reason}`));
         this.twitch.on('chat', this.handleTwitchChatEvents.bind(this));
+
+        // TODO: move into separate class
+        this.commands$ = Observable.create(observer => this.commands = observer)
+            .subscribe((cmd: KeepoBotCommand) => {
+                logger.debug(`Evaluating command [${cmd.type}]`);
+                if (cmd instanceof SayCommand) {
+                    this.twitch.say(cmd.channel, cmd.msg);
+                    logger.debug(`---> ${cmd.msg}`);
+                }
+                else if (cmd instanceof StopCommand) {
+                    this._stopAllTasks();
+                    this.twitch.disconnect();
+                    logger.trace('Client disconnecting');
+                }
+            });
     }
 
+    // TODO: move into separate class
     private handleTwitchChatEvents(channel: string,
                                    userState: TwitchUserState,
                                    message: string,
@@ -50,7 +76,8 @@ export class KeepoBot implements TwitchBot<KeepoBot> {
             .filter(([id, listener]) => listener.trigger(message, userState, channel))
             .forEach(([id, listener]) => {
                 logger.trace(`Calling "${id}" handler with ${message}, ${userState}`);
-                listener.handler(this, message, userState, channel);
+                listener.handler(this, message, userState, channel)
+                    .forEach(cmd => this.commands.next(cmd));
             });
     }
 
@@ -65,8 +92,7 @@ export class KeepoBot implements TwitchBot<KeepoBot> {
     }
 
     stop() {
-        this.twitch.disconnect();
-        logger.trace('Client disconnecting');
+        this.commands.next(new StopCommand());
         return this;
     }
 
@@ -86,10 +112,31 @@ export class KeepoBot implements TwitchBot<KeepoBot> {
         return this;
     }
 
+    startTask(task: TwitchBotTask<this>) {
+        this.stopTask(task);
+        this.tasks[task.id] = timer(task.interval, task.interval)
+            .subscribe(() => task.callback(this)
+                .forEach(cmd => this.commands.next(cmd))); // TODO: parse callback res into commands
+        logger.debug(`Added task ${task.id}`);
+        return this;
+    }
+
+    stopTask(task: TwitchBotTask<this>) {
+        const subscription = this.tasks[task.id];
+        if (subscription) {
+            subscription.unsubscribe();
+            logger.debug(`Removed task ${task.id}`);
+        }
+        return this;
+    }
+
+    private _stopAllTasks() {
+        Object.values(this.tasks).forEach(task => task.unsubscribe());
+    }
+
     // TODO: move to I/O unit which receives the twitch client
     say(msg: string, channel: string = config.twitch.stream.channel) {
-        this.twitch.say(channel, msg);
-        logger.debug(`---> ${msg}`);
+        this.commands.next(new SayCommand(msg, channel));
         return this;
     }
 }

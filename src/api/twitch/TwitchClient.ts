@@ -1,4 +1,4 @@
-import {TwitchBotEventHandler} from '../events/TwitchBotEventHandler';
+import {TwitchBotEventHandler} from '../events';
 
 export interface TwitchClient {
     connect();

@@ -1,4 +1,5 @@
 import {TwitchBotEvent} from '../events';
+import {TwitchBotTask} from '../tasks';
 
 export interface TwitchBot<B> {
     start: () => this;
@@ -7,8 +8,8 @@ export interface TwitchBot<B> {
     addEvent: (event: TwitchBotEvent<B, string>) => this;
     removeEvent: (event: TwitchBotEvent<B, string>) => this;
 
-    addTask?: (id: string, task: (bot: this) => void, interval: number) => this;
-    removeTask?: (id: string) => this;
+    startTask: (task: TwitchBotTask<B>) => this;
+    stopTask: (task: TwitchBotTask<B>) => this;
 
     uptime: number;
 }

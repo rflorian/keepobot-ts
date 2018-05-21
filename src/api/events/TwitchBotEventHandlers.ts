@@ -1,8 +1,8 @@
 import {TwitchUserState} from '../twitch';
 
-export type TwitchBotEventHandler<B> = (bot: B, ...args: any[]) => any;
+export type TwitchBotEventHandler<B, C> = (bot: B, ...args: any[]) => C[];
 
-export type TwitchBotChatEventHandler<B> = (bot: B,
-                                            message: string,
-                                            userState: TwitchUserState,
-                                            channel: string) => any; // refactor resulting type into command
+export type TwitchBotChatEventHandler<B, C> = (bot: B,
+                                               message: string,
+                                               userState: TwitchUserState,
+                                               channel: string) => C[];
