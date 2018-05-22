@@ -1,7 +1,5 @@
-import {KeepoBotCommand} from '../keepobot/commands';
-
-export interface TwitchBotTask<B> {
+export interface TwitchBotTask<B, C> {
     id: string;
-    callback: (bot: B) => KeepoBotCommand[];
+    callback: (bot: B) => C[];
     interval: number;
 }

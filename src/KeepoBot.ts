@@ -1,14 +1,14 @@
 import * as TwitchJS from 'twitch-js';
 import {
     KeepoBotChatEvent,
-    KeepoBotCommand,
-    SayCommand, StopCommand,
+    KeepoBotCommand, KeepoBotTask,
+    SayCommand,
+    StopCommand,
     TwitchBot,
     TwitchBotChatEventHandler,
     TwitchBotEvent,
     TwitchBotEventHandler,
     TwitchBotEventTrigger,
-    TwitchBotTask,
     TwitchClient,
     TwitchJSOptions,
     TwitchUserState
@@ -16,7 +16,8 @@ import {
 import {logger} from './logger';
 import {config} from './config';
 import {appNameAndVersion} from './util';
-import {Observable, Observer, Subscription, timer} from 'rxjs';
+import {Subscription, timer, Subject} from 'rxjs';
+import {KeepoBotEvent} from './api/keepobot/KeepoBotEvent';
 
 type KeepoBotEventListeners<T> = {
     [id: string]: {
@@ -28,19 +29,18 @@ type KeepoBotEventListeners<T> = {
 };
 type KeepoBotTasks = {[id: string]: Subscription};
 
-export class KeepoBot implements TwitchBot<KeepoBot> {
+export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
     private twitch: TwitchClient;
     private chatEventListeners: KeepoBotEventListeners<'chat'> = {};
     private eventListeners: KeepoBotEventListeners<Exclude<string, 'chat'>> = {};
     private tasks: KeepoBotTasks = {};
 
+    private commands$: Subject<KeepoBotCommand>;
+
     private startUpTimestamp;
 
-    private commands: Observer<any>;
-    private commands$: Observable<any>;
-
     get uptime() {
-        return new Date().getTime() - this.startUpTimestamp;
+        return this.startUpTimestamp ? new Date().getTime() - this.startUpTimestamp : undefined;
     }
 
     constructor(private twitchOptions: TwitchJSOptions) {
@@ -49,19 +49,19 @@ export class KeepoBot implements TwitchBot<KeepoBot> {
         this.twitch.on('chat', this.handleTwitchChatEvents.bind(this));
 
         // TODO: move into separate class
-        this.commands$ = Observable.create(observer => this.commands = observer)
-            .subscribe((cmd: KeepoBotCommand) => {
-                logger.debug(`Evaluating command [${cmd.type}]`);
-                if (cmd instanceof SayCommand) {
-                    this.twitch.say(cmd.channel, cmd.msg);
-                    logger.debug(`---> ${cmd.msg}`);
-                }
-                else if (cmd instanceof StopCommand) {
-                    this._stopAllTasks();
-                    this.twitch.disconnect();
-                    logger.trace('Client disconnecting');
-                }
-            });
+        this.commands$ = new Subject();
+        this.commands$.subscribe(cmd => {
+            logger.debug(`Evaluating command [${cmd.type}]`);
+            if (cmd instanceof SayCommand) {
+                this.twitch.say(cmd.channel, cmd.msg);
+                logger.debug(`---> ${cmd.msg}`);
+            }
+            else if (cmd instanceof StopCommand) {
+                this._stopAllTasks();
+                this.twitch.disconnect();
+                logger.trace('Client disconnecting');
+            }
+        });
     }
 
     // TODO: move into separate class
@@ -77,7 +77,7 @@ export class KeepoBot implements TwitchBot<KeepoBot> {
             .forEach(([id, listener]) => {
                 logger.trace(`Calling "${id}" handler with ${message}, ${userState}`);
                 listener.handler(this, message, userState, channel)
-                    .forEach(cmd => this.commands.next(cmd));
+                    .forEach(cmd => this.commands$.next(cmd));
             });
     }
 
@@ -92,11 +92,11 @@ export class KeepoBot implements TwitchBot<KeepoBot> {
     }
 
     stop() {
-        this.commands.next(new StopCommand());
+        this.commands$.next(new StopCommand());
         return this;
     }
 
-    addEvent<T extends string>(event: TwitchBotEvent<this, T>) {
+    addEvent<T extends string>(event: KeepoBotEvent<T>) {
         if (event instanceof KeepoBotChatEvent) {
             this.chatEventListeners[event.id] = {trigger: event.trigger, handler: event.handler};
         }
@@ -105,23 +105,23 @@ export class KeepoBot implements TwitchBot<KeepoBot> {
         return this;
     }
 
-    removeEvent<T extends string>(event: TwitchBotEvent<this, T>) {
+    removeEvent<T extends string>(event: KeepoBotEvent<T>) {
         if (event instanceof KeepoBotChatEvent) delete this.chatEventListeners[event.id];
         else delete this.eventListeners[event.id];
         logger.trace(`Removed ${event.id} chat event`);
         return this;
     }
 
-    startTask(task: TwitchBotTask<this>) {
+    startTask(task: KeepoBotTask) {
         this.stopTask(task);
         this.tasks[task.id] = timer(task.interval, task.interval)
             .subscribe(() => task.callback(this)
-                .forEach(cmd => this.commands.next(cmd))); // TODO: parse callback res into commands
+                .forEach(cmd => this.commands$.next(cmd))); // TODO: parse callback res into commands
         logger.debug(`Added task ${task.id}`);
         return this;
     }
 
-    stopTask(task: TwitchBotTask<this>) {
+    stopTask(task: KeepoBotTask) {
         const subscription = this.tasks[task.id];
         if (subscription) {
             subscription.unsubscribe();
@@ -136,7 +136,7 @@ export class KeepoBot implements TwitchBot<KeepoBot> {
 
     // TODO: move to I/O unit which receives the twitch client
     say(msg: string, channel: string = config.twitch.stream.channel) {
-        this.commands.next(new SayCommand(msg, channel));
+        this.commands$.next(new SayCommand(msg, channel));
         return this;
     }
 }

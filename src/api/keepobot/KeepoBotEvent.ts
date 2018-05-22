@@ -1,10 +1,12 @@
-import {TwitchBotEvent, TwitchBotEventHandler, TwitchBotEventTrigger} from '../events';
+import {TwitchBotChatEventHandler, TwitchBotEvent, TwitchBotEventHandler, TwitchBotEventTrigger} from '../events';
 import {KeepoBot} from '../../KeepoBot';
 import {KeepoBotCommand} from './commands';
 
-export class KeepoBotEvent<T extends Exclude<string, 'chat'>> implements TwitchBotEvent<KeepoBot> {
+export class KeepoBotEvent<T extends string> implements TwitchBotEvent<KeepoBot, T, KeepoBotCommand> {
     constructor(public id: string,
                 public trigger: TwitchBotEventTrigger,
-                public handler: TwitchBotEventHandler<KeepoBot, KeepoBotCommand>) {
+                public handler: T extends 'chat' ?
+                    TwitchBotChatEventHandler<KeepoBot, KeepoBotCommand> :
+                    TwitchBotEventHandler<KeepoBot, KeepoBotCommand>) {
     }
 }
