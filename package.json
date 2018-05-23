@@ -10,7 +10,7 @@
   "description": "Typescript port of https://github.com/rflorian/keepobot, an IRC bot to interact with twitch chat",
   "scripts": {
     "build": "tsc",
-    "start": "ts-node src/start.ts | pino-pretty -c -d HH:MM:ss",
+    "start": "ts-node src/start.ts",
     "test": "jest",
     "lint": "tslint ./src/**"
   },
@@ -24,6 +24,7 @@
   "dependencies": {
     "pino": "^4.16.1",
     "pino-pretty": "^1.0.1",
+    "request": "^2.87.0",
     "rxjs": "^6.1.0",
     "twitch-js": "^1.2.10"
   }

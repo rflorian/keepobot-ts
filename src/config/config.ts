@@ -12,7 +12,7 @@ export const config: TwitchBotConfig = {
         },
         api: {
             emotes: {
-                basic: 'https://twitchemotes.com/api_cache/v2/global.json',
+                data: 'https://twitchemotes.com/api_cache/v3/images.json',
                 bttv: 'https://api.betterttv.net/2/emotes',
                 refreshInterval: 30 // seconds
             },
@@ -23,7 +23,8 @@ export const config: TwitchBotConfig = {
         }
     },
     openWeather: {
-        presentApi: 'http://api.openweathermap.org/data/2.5/weather?q:{query}&units:metric&appid:{appid}',
-        forecastApi: 'http://api.openweathermap.org/data/2.5/forecast?q:{query}&units:metric&appid:{appid}',
-    }
+        presentApi: 'http://api.openweathermap.org/tmp/2.5/weather?q:{query}&units:metric&appid:{appid}',
+        forecastApi: 'http://api.openweathermap.org/tmp/2.5/forecast?q:{query}&units:metric&appid:{appid}',
+    },
+    defaultEmote: 'Kappa'
 };

@@ -2,5 +2,6 @@
 
 node_modules/
 dist/
+tmp/
 
 src/config/credentials.ts

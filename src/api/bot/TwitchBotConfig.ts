@@ -9,7 +9,7 @@ export interface TwitchBotConfig {
         },
         api: {
             emotes: {
-                basic: string,
+                data: string,
                 bttv: string,
                 refreshInterval: number // seconds
             },
@@ -22,5 +22,6 @@ export interface TwitchBotConfig {
     openWeather?: {
         presentApi: string,
         forecastApi: string
-    }
+    },
+    defaultEmote: string
 }

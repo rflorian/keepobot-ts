@@ -3,7 +3,6 @@ import {config} from './config';
 import {appNameAndVersion} from './util';
 import {KeepoBotChatEvent, SayCommand, StopCommand, TwitchJSOptions} from './api';
 import {KeepoBot} from './KeepoBot';
-import {KeepoBotTask} from './api/keepobot/KeepoBotTask';
 
 const twitchOptions: TwitchJSOptions = {
     channels: [`#${config.twitch.stream.channel}`],
@@ -14,9 +13,10 @@ const twitchOptions: TwitchJSOptions = {
 };
 
 logger.debug(`Starting ${appNameAndVersion}`);
-const bot = new KeepoBot(twitchOptions).start();
+const keepoBot = new KeepoBot(twitchOptions);
+keepoBot.start();
 
-bot.addEvent(new KeepoBotChatEvent(
+keepoBot.addEvent(new KeepoBotChatEvent(
     'shutdown',
     (message, userState) => message === '!stop' && userState.username === config.twitch.stream.channel,
     bot => [
@@ -24,14 +24,25 @@ bot.addEvent(new KeepoBotChatEvent(
         new StopCommand()
     ]
 ));
-bot.addEvent(new KeepoBotChatEvent(
+keepoBot.addEvent(new KeepoBotChatEvent(
     'kappa',
     message => message === 'Kappa',
     () => [new SayCommand('MrDestructoid')]
 ));
-
-bot.startTask(new KeepoBotTask(
-    'HeyGuys',
-    bot => [new SayCommand(`online for ${bot.uptime}ms monkaS`)],
-    5000
+keepoBot.addEvent(new KeepoBotChatEvent(
+    'emoteRepeater',
+    (message, userState) => !!userState.emotes,
+    (bot, message, userState) => {
+        const emotes = Object.entries(userState.emotes)
+            .map(([id, ranges]) => `${(bot.getEmoteName(id) + ' ').repeat(ranges.length)}`)
+            .reverse()
+            .join('');
+        return [new SayCommand(emotes)];
+    }
 ));
+
+// keepoBot.startTask(new KeepoBotTask(
+//     'HeyGuys',
+//     bot => [new SayCommand(`online for ${bot.uptime}ms monkaS`)],
+//     5000
+// ));
