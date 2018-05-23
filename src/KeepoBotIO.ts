@@ -1,9 +1,8 @@
 import {SayCommand, TwitchClient} from './api';
-import {asyncScheduler, Observable, of, Subject, Subscription} from 'rxjs';
-import {concatMap, delay, map, mergeAll, mergeMap, switchMapTo, windowTime} from 'rxjs/operators';
+import {Observable, Subject, Subscription} from 'rxjs';
 import {logger} from './logger';
 import {config} from './config';
-import {KeepoBotRateLimiter} from './KeepoBotRateLimiter';
+import {rateLimit} from './util';
 
 export class KeepoBotIO {
 
@@ -13,16 +12,14 @@ export class KeepoBotIO {
                 private toIRC$: Observable<SayCommand>,
                 private fromIRC$: Subject<any>) {
 
-        const rateLimiter = new KeepoBotRateLimiter(
-            config.twitch.api.quota.msgPerInterval,
-            config.twitch.api.quota.intervalDuration
-        );
-        this.toIRCSub = rateLimiter.thin(this.toIRC$).subscribe()
+        const count = config.twitch.api.quota.msgPerInterval;
+        const period = 1000 * config.twitch.api.quota.intervalDuration;
 
-        this.toIRCSub = this.toIRC$.pipe().subscribe((cmd: SayCommand) => {
+        this.toIRCSub = rateLimit(this.toIRC$, count, period).subscribe(cmd => {
             this.twitch.say(cmd.channel, cmd.msg);
             logger.debug(`---> ${cmd.msg}`);
         });
+
         this.twitch.on('chat', (...data) => this.fromIRC$.next(data));
     }
 
