@@ -17,7 +17,7 @@ export const config: TwitchBotConfig = {
                 refreshInterval: 30 // seconds
             },
             quota: {
-                msgPerInterval: 20,
+                msgPerInterval: 3,
                 intervalDuration: 30 // seconds
             }
         }

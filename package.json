@@ -26,6 +26,7 @@
     "pino-pretty": "^1.0.1",
     "request": "^2.87.0",
     "rxjs": "^6.1.0",
+    "stream-json": "^0.6.1",
     "twitch-js": "^1.2.10"
   }
 }

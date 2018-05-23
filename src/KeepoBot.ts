@@ -19,6 +19,7 @@ import {config} from './config';
 import {Subject, Subscription, timer} from 'rxjs';
 import {KeepoBotIO} from './KeepoBotIO';
 import * as request from 'request';
+import * as streamObject from 'stream-json/utils/StreamObject';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -84,17 +85,16 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
             });
     }
 
-    async start() {
+    start() {
         logger.trace('Client connecting');
-        this.initEmoteData();
-        await this.io.start();
-        this.startUpTimestamp = new Date().getTime();
+        this._initEmoteData();
+        this.io.start().then(() => this.startUpTimestamp = new Date().getTime());
         return this;
     }
 
-    async stop() {
+    stop() {
         this._stopAllTasks();
-        await this.io.stop();
+        this.io.stop();
         return this;
     }
 
@@ -117,8 +117,7 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
     startTask(task: KeepoBotTask) {
         this.stopTask(task);
         this.tasks[task.id] = timer(task.interval, task.interval)
-            .subscribe(() => task.callback(this)
-                .forEach(cmd => this.commands$.next(cmd)));
+            .subscribe(() => task.callback(this).forEach(cmd => this.commands$.next(cmd)));
         logger.debug(`Added task ${task.id}`);
         return this;
     }
@@ -136,40 +135,50 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
         Object.values(this.tasks).forEach(task => task.unsubscribe());
     }
 
-    private initEmoteData() {
-        const jsonPath = path.join(__dirname, '..', 'tmp', 'emotes.json');
-        // if (fs.existsSync(jsonPath)) {
-        //     logger.debug('Fetching existing emote data');
-        //     const start = new Date().getTime();
-        //     // TODO: change local emote caching to prevent heap OOM errors
-        //     fs.readFile(jsonPath, (err, body) => {
-        //         const delay = new Date().getTime() - start;
-        //         if (err) logger.error(`Failed loading local emote data after ${delay}ms`, err);
-        //         else {
-        //             logger.debug(`Loaded cached emote data with ${Object.keys(body).length} entries after ${delay}ms`);
-        //             this.emotes = body;
-        //         }
-        //     });
-        //
-        //     const lastChange = fs.statSync(jsonPath).mtime.getTime();
-        //     if (new Date().getTime() - lastChange < 3600 * 1000) return;
-        // }
-        // else {
-            logger.debug('Fetching new emote data');
-            const start = new Date().getTime();
-            request({
-                url: config.twitch.api.emotes.data,
-                json: true
-            }, (err, res, body) => {
-                const delay = new Date().getTime() - start;
-                if (err) logger.error(`Failed loading remote emote data after ${delay}ms`, err);
-                else {
-                    logger.debug(`Received emote data with ${Object.keys(body).length} entries after ${delay}ms`);
-                    this.emotes = body;
-                    fs.writeFileSync(jsonPath, JSON.stringify(body));
-                }
-            });
-        // }
+    private _initEmoteData() {
+        const cachePath = path.join(__dirname, '..', 'tmp', 'emotes.json');
+        if (fs.existsSync(cachePath)) {
+            const lastChange = fs.statSync(cachePath).mtime.getTime();
+            if (new Date().getTime() - lastChange < 3600 * 1000) {
+                this._loadCachedEmoteData(cachePath);
+                return;
+            }
+        }
+        this._loadAndCacheEmoteData(cachePath);
+    }
+
+    private _loadCachedEmoteData(cachePath: string) {
+        logger.debug('Loading cached emote data from', cachePath);
+        const start = new Date().getTime();
+        const jsonObjectParser = streamObject.make();
+        jsonObjectParser.output.on('data', data => this.emotes[data.key] = data.value);
+        jsonObjectParser.output.on('end', () => {
+            const delay = new Date().getTime() - start;
+            logger.debug(`Loaded cached emotes after ${delay}ms`);
+            this.toIRC$.next(new SayCommand('Armed and ready SMOrc'));
+        });
+        fs.createReadStream(cachePath).pipe(jsonObjectParser.input);
+    }
+
+    private _loadAndCacheEmoteData(cachePath: string) {
+        logger.debug('Fetching new emote data');
+        const start = new Date().getTime();
+        request({
+            url: config.twitch.api.emotes.data,
+            json: true
+        }, (err, res, body) => {
+            const delay = new Date().getTime() - start;
+            if (err) logger.error(`Failed loading remote emote data after ${delay}ms`, err);
+            else {
+                logger.debug(`Received emote data after ${delay}ms`);
+                this.emotes = body;
+
+                logger.debug('Writing emote data to', cachePath);
+                fs.writeFileSync(cachePath, JSON.stringify(this.emotes));
+
+                this.toIRC$.next(new SayCommand('Armed and ready SMOrc'));
+            }
+        });
     }
 
     getEmoteName(emoteId: string) {
