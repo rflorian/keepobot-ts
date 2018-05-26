@@ -24,7 +24,7 @@ export class KeepoBotIO {
     }
 
     async start() {
-        this.twitch.connect().then(() => logger.debug('Twitch client connected'));
+        this.twitch.connect().then(() => logger.info('Twitch client connected'));
     }
 
     stop() {

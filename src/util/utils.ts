@@ -1,7 +1,7 @@
 import {concatMap, delay, scan} from 'rxjs/operators';
 import {of} from 'rxjs';
 
-export const appNameAndVersion = `${process.env.npm_package_name} (${process.env.npm_package_version})`;
+export const appNameAndVersion = `${process.env.npm_package_name}@${process.env.npm_package_version}`;
 
 // see https://stackoverflow.com/a/42286407
 export const rateLimit = (source, count, period) => {
@@ -12,6 +12,7 @@ export const rateLimit = (source, count, period) => {
                 const since = now - period;
                 records = records.filter((record) => record.until > since);
 
+                // TODO: support items which consume more than 1 token
                 if (records.length >= count) {
                     const firstRecord = records[0];
                     const lastRecord = records[records.length - 1];

@@ -1,7 +1,7 @@
 import {logger} from './logger';
 import {config} from './config';
 import {appNameAndVersion} from './util';
-import {KeepoBotChatEvent, SayCommand, StopCommand, TwitchJSOptions} from './api';
+import {KeepoBotChatEvent, KeepoBotTask, SayCommand, StopCommand, TwitchJSOptions} from './api';
 import {KeepoBot} from './KeepoBot';
 
 const twitchOptions: TwitchJSOptions = {
@@ -12,12 +12,13 @@ const twitchOptions: TwitchJSOptions = {
     }
 };
 
-logger.debug(`Starting ${appNameAndVersion}`);
+logger.level = 'info';
+logger.info(`Starting ${appNameAndVersion}`);
 const keepoBot = new KeepoBot(twitchOptions);
 keepoBot.start();
 
 keepoBot.addEvent(new KeepoBotChatEvent(
-    'shutdown',
+    'shutdownEvent',
     (message, userState) => message === '!stop' && userState.username === config.twitch.stream.channel,
     bot => [
         new SayCommand(`TFW ded after ${bot.uptime}ms FeelsBadMan :gun:`),
@@ -25,7 +26,7 @@ keepoBot.addEvent(new KeepoBotChatEvent(
     ]
 ));
 keepoBot.addEvent(new KeepoBotChatEvent(
-    'kappa',
+    'kappaEvent',
     message => message === 'Kappa',
     () => [new SayCommand('MrDestructoid')]
 ));
@@ -41,8 +42,8 @@ keepoBot.addEvent(new KeepoBotChatEvent(
     }
 ));
 
-// keepoBot.startTask(new KeepoBotTask(
-//     'HeyGuys',
-//     bot => [new SayCommand(`online for ${bot.uptime}ms monkaS`)],
-//     5000
-// ));
+keepoBot.startTask(new KeepoBotTask(
+    'periodicUptime',
+    bot => [new SayCommand(`online for ${Math.round(bot.uptime / (60 * 1000))}min monkaS`)],
+    60000
+));

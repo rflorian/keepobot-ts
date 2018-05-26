@@ -103,14 +103,14 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
             this.chatEventListeners[event.id] = {trigger: event.trigger, handler: event.handler};
         }
         else this.eventListeners[event.id] = {trigger: event.trigger, handler: event.handler};
-        logger.trace(`Added ${event.id} chat event`);
+        logger.info(`Added "${event.id}" event`);
         return this;
     }
 
     removeEvent<T extends string>(event: KeepoBotEvent<T>) {
         if (event instanceof KeepoBotChatEvent) delete this.chatEventListeners[event.id];
         else delete this.eventListeners[event.id];
-        logger.trace(`Removed ${event.id} chat event`);
+        logger.info(`Removed "${event.id}" event`);
         return this;
     }
 
@@ -118,7 +118,7 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
         this.stopTask(task);
         this.tasks[task.id] = timer(task.interval, task.interval)
             .subscribe(() => task.callback(this).forEach(cmd => this.commands$.next(cmd)));
-        logger.debug(`Added task ${task.id}`);
+        logger.info(`Added "${task.id}" task`);
         return this;
     }
 
@@ -126,7 +126,7 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
         const subscription = this.tasks[task.id];
         if (subscription) {
             subscription.unsubscribe();
-            logger.debug(`Removed task ${task.id}`);
+            logger.info(`Removed "${task.id}" task`);
         }
         return this;
     }
@@ -154,7 +154,7 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
         jsonObjectParser.output.on('data', data => this.emotes[data.key] = data.value);
         jsonObjectParser.output.on('end', () => {
             const delay = new Date().getTime() - start;
-            logger.debug(`Loaded cached emotes after ${delay}ms`);
+            logger.info(`Loaded cached emotes after ${delay}ms`);
             this.toIRC$.next(new SayCommand('Armed and ready SMOrc'));
         });
         fs.createReadStream(cachePath).pipe(jsonObjectParser.input);
@@ -170,7 +170,7 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
             const delay = new Date().getTime() - start;
             if (err) logger.error(`Failed loading remote emote data after ${delay}ms`, err);
             else {
-                logger.debug(`Received emote data after ${delay}ms`);
+                logger.info(`Received emote data after ${delay}ms`);
                 this.emotes = body;
 
                 logger.debug('Writing emote data to', cachePath);
