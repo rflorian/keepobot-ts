@@ -1,6 +1,6 @@
 {
   "name": "KeepoBot-ts",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "rflorian",
   "license": "MIT",
   "repository": {
@@ -10,6 +10,7 @@
   "description": "Typescript port of https://github.com/rflorian/keepobot, an IRC bot to interact with twitch chat",
   "scripts": {
     "build": "tsc",
+    "release": "standard-version",
     "start": "ts-node src/start.ts",
     "test": "jest",
     "lint": "tslint ./src/**"
