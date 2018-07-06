@@ -1,4 +1,4 @@
-export interface TwitchJSOptions {
+export interface TwitchJsOptions {
     channels: string[],
     identity?: {
         username: string,

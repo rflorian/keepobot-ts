@@ -1,3 +1,3 @@
-export * from './KeepoBotCommand';
-export * from './SayCommand';
-export * from './StopCommand';
+export * from './keepo-bot-command';
+export * from './keepo-bot-say-command';
+export * from './keepo-bot-stop-command';

@@ -6,7 +6,7 @@ Typescript twitch chat bot
 * Specify customizable event handlers to add behavior to the bot
 
 ## How to run
-Add a credentials.ts file inside src/config/ that conforms to the [TwitchBotCredentials](src/api/bot/TwitchBotCredentials.ts) interface.
+Add a credentials.ts file inside src/config/ that conforms to the [TwitchBotCredentials](src/api/bot/twitch-bot-credentials.ts) interface.
 ```
 npm i
 npm start

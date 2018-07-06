@@ -2,7 +2,7 @@ import {TwitchBotEvent} from '../events';
 import {TwitchBotTask} from '../tasks';
 
 export interface TwitchBot<B, C> {
-    start: () => this;
+    start: () => this | Promise<this>;
     stop: () => this;
 
     addEvent: (event: TwitchBotEvent<B, string, C>) => this;

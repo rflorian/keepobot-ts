@@ -1,4 +1,4 @@
 export * from './commands';
-export * from './KeepoBotEvent';
-export * from './KeepoBotChatEvent';
-export * from './KeepoBotTask';
+export * from './keepo-bot-event';
+export * from './keepo-bot-chat-event';
+export * from './keepo-bot-task';

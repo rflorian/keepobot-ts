@@ -1,6 +1,6 @@
 import {TwitchBotChatEventHandler, TwitchBotEvent, TwitchBotEventHandler, TwitchBotEventTrigger} from '../events';
-import {KeepoBot} from '../../KeepoBot';
-import {KeepoBotCommand} from './commands';
+import {KeepoBot}                                                                                from '../../bot/keepo-bot';
+import {KeepoBotCommand}                                                                         from './commands';
 
 export class KeepoBotEvent<T extends string> implements TwitchBotEvent<KeepoBot, T, KeepoBotCommand> {
     constructor(public id: string,

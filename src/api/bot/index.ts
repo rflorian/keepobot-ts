@@ -1,3 +1,3 @@
-export * from './TwitchBot';
-export * from './TwitchBotConfig';
-export * from './TwitchBotCredentials';
+export * from './twitch-bot';
+export * from './twitch-bot-config';
+export * from './twitch-bot-credentials';

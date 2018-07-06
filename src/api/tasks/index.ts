@@ -1,1 +1,1 @@
-export * from './TwitchBotTask';
+export * from './twitch-bot-task';
