@@ -1,8 +1,6 @@
 import {concatMap, delay, scan} from 'rxjs/operators';
 import {of, Observable}         from 'rxjs';
 
-export const appNameAndVersion = `${process.env.npm_package_name}@${process.env.npm_package_version}`;
-
 // see https://stackoverflow.com/a/42286407
 export const rateLimit = <T>(source: Observable<T>, count: number, period: number): Observable<T> =>
     source.pipe(

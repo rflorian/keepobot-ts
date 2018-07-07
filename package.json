@@ -16,9 +16,12 @@
     "lint": "tslint ./src/**"
   },
   "jest": {
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
+    "moduleFileExtensions": ["ts"],
     "collectCoverage": true,
     "collectCoverageFrom": [
       "**/*.ts",
+      "!**/*.test.ts",
       "!**/node_modules/**"
     ],
     "coverageThreshold": {
@@ -28,18 +31,18 @@
         "lines": 100,
         "statements": 100
       }
-    },
-    "testMatch": [
-      "**/src/**/*.test.ts"
-    ]
+    }
   },
   "devDependencies": {
+    "@types/jest": "^23.1.4",
     "@types/pino": "^4.7.1",
-    "jest": "^22.4.4",
+    "jest": "^23.3.0",
+    "jest-cli": "^23.3.0",
     "standard-version": "^4.4.0",
+    "ts-jest": "^23.0.0",
+    "ts-node": "^6.0.3",
     "tslint": "^5.10.0",
-    "typescript": "^2.8.3",
-    "ts-node": "^6.0.3"
+    "typescript": "^2.9.2"
   },
   "dependencies": {
     "pino": "^4.16.1",

@@ -106,7 +106,7 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
 
     async start() {
         logger.trace('Client connecting');
-        await this._initEmoteData();
+        // await this._initEmoteData();
         await this.io.start();
         this.startUpTimestamp = new Date().getTime();
         return this;

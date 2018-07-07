@@ -23,8 +23,8 @@ export const config: TwitchBotConfig = {
         }
     },
     openWeather:  {
-        presentApi:  'http://api.openweathermap.org/tmp/2.5/weather?q:{query}&units:metric&appid:{appid}',
-        forecastApi: 'http://api.openweathermap.org/tmp/2.5/forecast?q:{query}&units:metric&appid:{appid}',
+        presentApi:  'http://api.openweathermap.org/tmp/2.5/weather?q:%s&units:metric&appid:%s',
+        forecastApi: 'http://api.openweathermap.org/tmp/2.5/forecast?q:%s&units:metric&appid:%s',
     },
     defaultEmote: 'Kappa'
 };
