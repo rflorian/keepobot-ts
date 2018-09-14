@@ -23,7 +23,7 @@ import * as streamObject              from 'stream-json/utils/StreamObject';
 import * as fs                        from 'fs';
 import * as path                      from 'path';
 import {KeepoBotTasks}                from './tasks';
-import {KeepoBotEvents}               from './events';
+import {keepoBotEvents}               from './events';
 
 type KeepoBotEventListeners<T> = {
     [id: string]: {
@@ -83,7 +83,7 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
         });
     }
 
-    private registerEvents() { KeepoBotEvents.forEach(e => this.addEvent(e)); }
+    private registerEvents() { keepoBotEvents.forEach(e => this.addEvent(e)); }
 
     private registerTasks() { KeepoBotTasks.forEach(t => this.startTask(t)); }
 

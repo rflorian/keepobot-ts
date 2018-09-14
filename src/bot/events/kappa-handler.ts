@@ -2,6 +2,6 @@ import {KeepoBotChatEvent, KeepoBotSayCommand} from '../../api';
 
 export const kappaHandler = new KeepoBotChatEvent(
     'kappaHandler',
-    message => message === 'Kappa',
+    msg => msg === 'Kappa',
     () => [new KeepoBotSayCommand('MrDestructoid')]
 );
