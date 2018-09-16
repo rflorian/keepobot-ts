@@ -17,7 +17,7 @@ const nonLossyThrottleConcat = concatMap((records: any[]) => {
 });
 
 const rateAnalyzingScan = (count: number, period: number) =>
-    scan((records, value) => {
+    <any>scan((records, value) => {
         const now   = Date.now();
         const since = now - period;
         records     = records.filter((record) => record.until > since);

@@ -1,9 +1,10 @@
-import {KeepoBotSayCommand, TwitchClient}  from '../api/index';
 import {Observable, Subject, Subscription} from 'rxjs';
+import {tap}                               from 'rxjs/operators';
+import {KeepoBotSayCommand, TwitchClient}  from '../api/index';
 import {logger}                            from '../logger';
 import {config}                            from '../config/index';
 import {rateLimit}                         from '../util/index';
-import {tap}                               from 'rxjs/operators';
+
 
 export class KeepoBotIo {
     private static readonly allowedPerInterval = config.twitch.api.quota.msgPerInterval;

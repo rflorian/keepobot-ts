@@ -1,1 +1,1 @@
-export * from './events';
+export * from './keepo-bot-events';

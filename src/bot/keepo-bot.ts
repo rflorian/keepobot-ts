@@ -1,4 +1,4 @@
-import * as TwitchJS                  from 'twitch-js';
+import * as TwitchJS from 'twitch-js';
 import {
     KeepoBotChatEvent,
     KeepoBotCommand,
@@ -12,33 +12,34 @@ import {
     TwitchBotEventTrigger,
     TwitchClient,
     TwitchJsOptions,
-    TwitchUserState
-}                                     from '../api/index';
-import {logger}                       from '../logger';
-import {config}                       from '../config';
-import {Subject, Subscription, timer} from 'rxjs';
-import {KeepoBotIo}                   from './keepo-bot-io';
-import * as request                   from 'request';
-import * as streamObject              from 'stream-json/utils/StreamObject';
-import * as fs                        from 'fs';
-import * as path                      from 'path';
-import {KeepoBotTasks}                from './tasks';
-import {keepoBotEvents}               from './events';
+    TwitchUserState,
+    TwitchBotEvent
+} from '../api/index';
+import { logger } from '../logger';
+import { config } from '../config';
+import { Subject, Subscription, timer } from 'rxjs';
+import { KeepoBotIo } from './keepo-bot-io';
+import * as request from 'request';
+import * as streamObject from 'stream-json/utils/StreamObject';
+import * as fs from 'fs';
+import * as path from 'path';
+import { keepoBotTasks } from './tasks';
+import { keepoBotEvents } from './events';
 
 type KeepoBotEventListeners<T> = {
     [id: string]: {
         trigger: TwitchBotEventTrigger,
         handler: T extends 'chat' ?
-            TwitchBotChatEventHandler<KeepoBot, KeepoBotCommand> :
-            TwitchBotEventHandler<KeepoBot, KeepoBotCommand>
+        TwitchBotChatEventHandler<KeepoBot, KeepoBotCommand> :
+        TwitchBotEventHandler<KeepoBot, KeepoBotCommand>
     }
 };
 
 export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
     private twitch: TwitchClient;
-    private chatEventListeners: KeepoBotEventListeners<'chat'>              = {};
+    private chatEventListeners: KeepoBotEventListeners<'chat'> = {};
     private eventListeners: KeepoBotEventListeners<Exclude<string, 'chat'>> = {};
-    private tasks: {[id: string]: Subscription}                             = {};
+    private tasks: { [id: string]: Subscription } = {};
 
     private fromIRC$: Subject<any>;
     private toIRC$: Subject<KeepoBotSayCommand>;
@@ -50,7 +51,7 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
 
     get uptime() {
         if (!this.startUpTimestamp) return;
-        return new Date().getTime() - this.startUpTimestamp;
+        return Date.now() - this.startUpTimestamp;
     }
 
     constructor(private twitchOptions: TwitchJsOptions) {
@@ -71,7 +72,7 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
         this.fromIRC$ = new Subject();
         this.fromIRC$.subscribe(data => this.handleTwitchChatEvents.bind(this)(...data));
         this.toIRC$ = new Subject();
-        this.io     = new KeepoBotIo(this.twitch, this.toIRC$, this.fromIRC$);
+        this.io = new KeepoBotIo(this.twitch, this.toIRC$, this.fromIRC$);
     }
 
     private buildCommandListener() {
@@ -85,13 +86,13 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
 
     private registerEvents() { keepoBotEvents.forEach(e => this.addEvent(e)); }
 
-    private registerTasks() { KeepoBotTasks.forEach(t => this.startTask(t)); }
+    private registerTasks() { keepoBotTasks.forEach(t => this.startTask(t)); }
 
     // TODO: move into separate class
     private handleTwitchChatEvents(channel: string,
-                                   userState: TwitchUserState,
-                                   message: string,
-                                   self: boolean) {
+        userState: TwitchUserState,
+        message: string,
+        self: boolean) {
         if (self) return;
         logger.debug(`<--- ${userState.username}: ${message}`);
 
@@ -108,7 +109,7 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
         logger.trace('Client connecting');
         await this._initEmoteData();
         await this.io.start();
-        this.startUpTimestamp = new Date().getTime();
+        this.startUpTimestamp = Date.now();
         return this;
     }
 
@@ -120,9 +121,9 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
 
     addEvent<T extends string>(event: KeepoBotEvent<T>) {
         if (event instanceof KeepoBotChatEvent) {
-            this.chatEventListeners[event.id] = {trigger: event.trigger, handler: event.handler};
+            this.chatEventListeners[event.id] = { trigger: event.trigger, handler: event.handler };
         }
-        else this.eventListeners[event.id] = {trigger: event.trigger, handler: event.handler};
+        else this.eventListeners[event.id] = { trigger: event.trigger, handler: event.handler };
         logger.info(`Added "${event.id}" event`);
         return this;
     }
@@ -132,6 +133,11 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
         else delete this.eventListeners[event.id];
         logger.info(`Removed "${event.id}" event`);
         return this;
+    }
+
+    get events() {
+        return Object.entries({ ...this.eventListeners, ...this.chatEventListeners })
+            .map(([id, eventHandler]) => ({ id, trigger: eventHandler.trigger, handler: eventHandler.handler }));
     }
 
     startTask(task: KeepoBotTask) {
@@ -157,8 +163,8 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
         const cachePath = path.join(__dirname, '..', '..', 'tmp', 'emotes.json');
         if (!fs.existsSync(cachePath)) return await this._loadAndCacheEmoteData(cachePath);
 
-        const sinceLastChange = new Date().getTime() - fs.statSync(cachePath).mtime.getTime();
-        const oneDay          = 24 * 60 * 60 * 1000;
+        const sinceLastChange = Date.now() - fs.statSync(cachePath).mtime.getTime();
+        const oneDay = 24 * 60 * 60 * 1000;
         return sinceLastChange > oneDay ?
             await this._loadAndCacheEmoteData(cachePath) :
             await this._loadCachedEmoteData(cachePath);
@@ -167,11 +173,11 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
     private _loadCachedEmoteData(cachePath: string) {
         return new Promise(resolve => {
             logger.debug('Loading cached emote data from', cachePath);
-            const start            = new Date().getTime();
+            const start = Date.now();
             const jsonObjectParser = streamObject.make();
             jsonObjectParser.output.on('data', data => this.emotes[data.key] = data.value);
             jsonObjectParser.output.on('end', () => {
-                const delay = new Date().getTime() - start;
+                const delay = Date.now() - start;
                 logger.info(`Loaded cached emotes after ${delay}ms`);
                 resolve();
             });
@@ -181,12 +187,12 @@ export class KeepoBot implements TwitchBot<KeepoBot, KeepoBotCommand> {
 
     private _loadAndCacheEmoteData(cachePath: string) {
         logger.debug('Fetching new emote data');
-        const start = new Date().getTime();
+        const start = Date.now();
         request({
-            url:  config.twitch.api.emotes.data,
+            url: config.twitch.api.emotes.data,
             json: true
         }, (err, res, body) => {
-            const delay = new Date().getTime() - start;
+            const delay = Date.now() - start;
             if (err) logger.error(`Failed loading remote emote data after ${delay}ms`, err);
             else {
                 logger.info(`Received emote data after ${delay}ms`);
