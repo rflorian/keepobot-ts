@@ -1,18 +1,21 @@
 {
   "compilerOptions": {
+    "target": "es2017",
     "module": "commonjs",
+    "lib": [
+      "esnext"
+    ],
+    "outDir": "./dist",
     "noImplicitAny": false,
     "removeComments": true,
     "preserveConstEnums": true,
-    "outFile": "../../built/local/tsc.js",
-    "sourceMap": true,
-    "target": "esnext"
+    "sourceMap": false
   },
   "include": [
     "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "**/*.spec.ts"
+    "**/*.test.ts"
   ]
 }
