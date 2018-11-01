@@ -1,3 +1,6 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import {streamObject} from 'stream-json';
 import * as TwitchJS from 'twitch-js';
 import {
     KeepoBotChatEvent,
@@ -20,9 +23,6 @@ import { config } from '../config';
 import { Subject, Subscription, timer } from 'rxjs';
 import { KeepoBotIo } from './keepo-bot-io';
 import * as request from 'request';
-import * as streamObject from 'stream-json/utils/StreamObject';
-import * as fs from 'fs';
-import * as path from 'path';
 import { keepoBotTasks } from './tasks';
 import { keepoBotEvents } from './events';
 

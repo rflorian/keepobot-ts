@@ -6,5 +6,5 @@ export const logger = pino(<LoggerOptions> {
     name: 'KeepoBot',
     base: null,
     prettyPrint: true,
-    timestamp: false
+    timestamp: false,
 });
