@@ -1,5 +1,5 @@
+import {KeepoBot}                                         from '../../bot';
 import {TwitchBotChatEventHandler, TwitchBotEventTrigger} from '../events';
-import {KeepoBot}                                         from '../../bot/keepo-bot';
 import {KeepoBotCommand}                                  from './commands';
 import {KeepoBotEvent}                                    from './keepo-bot-event';
 

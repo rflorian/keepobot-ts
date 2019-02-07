@@ -11,9 +11,11 @@ export class KeepoBotIo {
 
     private readonly toIRCSub: Subscription;
 
-    constructor(private twitch: TwitchClient,
+    constructor(
+        private twitch: TwitchClient,
         private toIRC$: Observable<KeepoBotSayCommand>,
-        private fromIRC$: Subject<any>) {
+        private fromIRC$: Subject<any>
+    ) {
 
         this.toIRCSub = rateLimit(this.toIRC$, KeepoBotIo.ALLOWED_PER_INTERVAL, KeepoBotIo.INTERVAL_LENGTH)
             .pipe(tap(cmd => logger.debug(`---> ${cmd.msg}`)))
