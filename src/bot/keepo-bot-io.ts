@@ -1,39 +1,50 @@
-import {Observable, Subject, Subscription} from 'rxjs';
+import {Subject, Subscription} from 'rxjs';
 import {tap} from 'rxjs/operators';
-import {KeepoBotSayCommand, TwitchClient} from '../api';
-import {logger} from '../logger';
+import {KeepoBotSayCommand, TwitchClient, TwitchUserState} from '../api';
 import {config} from '../config';
+import {logger} from '../logger';
 import {rateLimit} from '../util';
 
 export class KeepoBotIo {
     public static readonly ALLOWED_PER_INTERVAL = config.twitch.api.quota.msgPerInterval;
     public static readonly INTERVAL_LENGTH = 1000 * config.twitch.api.quota.intervalDuration;
 
-    private readonly toIRCSub: Subscription;
+    private toTwitch$ = new Subject<KeepoBotSayCommand>();
+    private fromTwitch$ = new Subject<[[string, TwitchUserState, string, boolean]]>();
+    private readonly toTwitchSub: Subscription;
 
     constructor(
-        private twitch: TwitchClient,
-        private toIRC$: Observable<KeepoBotSayCommand>,
-        private fromIRC$: Subject<any>
+        private twitchClient: TwitchClient,
     ) {
+        this.twitchClient.on('disconnected', reason => logger.debug(`Twitch client disconnected: ${reason}`));
 
-        this.toIRCSub = rateLimit(this.toIRC$, KeepoBotIo.ALLOWED_PER_INTERVAL, KeepoBotIo.INTERVAL_LENGTH)
+        this.toTwitchSub = rateLimit(this.toTwitch$, KeepoBotIo.ALLOWED_PER_INTERVAL, KeepoBotIo.INTERVAL_LENGTH)
             .pipe(tap(cmd => logger.debug(`---> ${cmd.msg}`)))
-            .subscribe(cmd => this.twitch.say(cmd.channel, cmd.msg));
+            .subscribe(cmd => this.twitchClient.say(cmd.channel, cmd.msg));
 
-        this.twitch.on('chat', (...data) => this.fromIRC$.next(data));
+        this.twitchClient.on('chat', (...data) => this.fromTwitch$.next(data));
     }
 
     async start() {
-        await this.twitch.connect();
+        logger.debug('KeepoBotIo connecting...');
+        await this.twitchClient.connect();
         logger.info('KeepoBotIo connected');
     }
 
     async stop() {
+        logger.debug('KeepoBotIo disconnecting...');
         await Promise.all([
-            this.twitch.disconnect(),
-            this.toIRCSub.unsubscribe()
+            this.twitchClient.disconnect(),
+            this.toTwitchSub.unsubscribe()
         ]);
         logger.info('KeepoBotIo disconnected');
+    }
+
+    send(cmd: KeepoBotSayCommand) {
+        this.toTwitch$.next(cmd);
+    }
+
+    listen() {
+        return this.fromTwitch$;
     }
 }

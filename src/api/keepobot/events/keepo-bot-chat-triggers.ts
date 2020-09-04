@@ -1,6 +1,6 @@
 export enum KeepoBotChatTriggers {
-    COMMANDS = '!cmd',
-    KAPPA = 'Kappa',
-    SHUTDOWN = '!stop',
-    MAFFS = '!maffs'
+    Commands = '!cmd',
+    Kappa = 'Kappa',
+    Shutdown = '!stop',
+    Maffs = '!maffs'
 }

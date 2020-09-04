@@ -1,25 +1,20 @@
-import {Subject} from 'rxjs';
 import {KeepoBotSayCommand, TwitchClient} from '../api';
-import {KeepoBotIo} from './keepo-bot-io';
 import {logger} from '../logger';
+import {KeepoBotIo} from './keepo-bot-io';
 
 describe('keepo-bot-io', () => {
     let underTest: KeepoBotIo;
-    let toIrc$: Subject<KeepoBotSayCommand>;
-    let fromIrc$: Subject<any>;
     let mockTwitchClient: TwitchClient;
 
     beforeEach(() => {
         logger.level = 'error';
-        toIrc$ = new Subject<KeepoBotSayCommand>();
-        fromIrc$ = new Subject<any>();
         mockTwitchClient = <TwitchClient>{
             connect: jest.fn(),
             disconnect: jest.fn(),
             say: jest.fn(),
             on: jest.fn()
         };
-        underTest = new KeepoBotIo(mockTwitchClient, toIrc$, fromIrc$);
+        underTest = new KeepoBotIo(mockTwitchClient);
     });
 
     it('can be instantiated', () => expect(underTest).toBeDefined());
@@ -44,10 +39,10 @@ describe('keepo-bot-io', () => {
         it('passes chat events through', done => {
             let eventCb;
             mockTwitchClient.on = jest.fn().mockImplementation((eventName, cb) => eventCb = cb);
-            underTest = new KeepoBotIo(mockTwitchClient, toIrc$, fromIrc$);
+            underTest = new KeepoBotIo(mockTwitchClient);
 
             const payload = 'test';
-            fromIrc$.subscribe(v => {
+            underTest.listen().subscribe(v => {
                 expect(v[0]).toBe(payload);
                 done();
             });
@@ -63,12 +58,14 @@ describe('keepo-bot-io', () => {
                 expect(msg).toEqual(testCmd.msg);
                 done();
             });
-            toIrc$.next(testCmd);
+            underTest = new KeepoBotIo(mockTwitchClient);
+            underTest.send(testCmd);
         });
 
         it('are rate limited', done => {
+            underTest = new KeepoBotIo(mockTwitchClient);
             const sendEvents = amount => {
-                for (const _ of Array.from({length: amount})) toIrc$.next(new KeepoBotSayCommand('test'));
+                for (const _ of Array.from({length: amount})) underTest.send(new KeepoBotSayCommand('test'));
             }
 
             const limit = KeepoBotIo.ALLOWED_PER_INTERVAL;

@@ -8,11 +8,11 @@ export const config: TwitchBotConfig = {
             password: credentials.twitchBotAccount.password
         },
         stream: {
-            channel: credentials.twitchStreamAccounts[0].channel
+            channel: credentials.twitchStreamAccounts[0].channel,
         },
         api:    {
             emotes: {
-                data:            'https://twitchemotes.com/api_cache/v3/images.json',
+                data:            'https://twitchemotes.com/api/v4/emotes',
                 bttv:            'https://api.betterttv.net/2/emotes',
                 refreshInterval: 30 // seconds
             },

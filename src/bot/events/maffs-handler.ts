@@ -1,6 +1,6 @@
 import {KeepoBotChatEvent, KeepoBotChatTriggers, KeepoBotSayCommand} from '../../api';
 
-const maffsRegex = new RegExp(`^${KeepoBotChatTriggers.MAFFS} ([0-9]+)$`);
+const maffsRegex = new RegExp(`^${KeepoBotChatTriggers.Maffs} ([0-9]+)$`);
 
 const valueOfSevens = (length: number): number => Number.parseInt('7'.repeat(length));
 

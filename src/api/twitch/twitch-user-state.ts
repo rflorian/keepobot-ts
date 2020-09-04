@@ -5,9 +5,9 @@ export interface TwitchUserState {
     ['user-type']: string;
     ['room-id']: string;
     color: string;
-    badges: {[key: string]: string};
+    badges: Record<string, string>;
     ['badges-raw']: string;
-    emotes: {[key: string]: string[]};
+    emotes: Record<string, string[]>;
     ['emotes-raw']: string;
     mod: boolean;
     subscriber: boolean;

@@ -2,6 +2,6 @@ import { KeepoBotChatEvent, KeepoBotSayCommand, KeepoBotChatTriggers } from '../
 
 export const kappaHandler = new KeepoBotChatEvent(
     'kappaHandler',
-    msg => msg === KeepoBotChatTriggers.KAPPA,
+    msg => msg === KeepoBotChatTriggers.Kappa,
     () => [new KeepoBotSayCommand('MrDestructoid')]
 );

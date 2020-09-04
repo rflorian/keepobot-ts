@@ -2,7 +2,7 @@ import {KeepoBotChatEvent, KeepoBotSayCommand, KeepoBotChatTriggers} from '../..
 
 export const commandsHandler = new KeepoBotChatEvent(
     'commandsHandler',
-    msg => msg.toLowerCase().startsWith(KeepoBotChatTriggers.COMMANDS),
+    msg => msg.toLowerCase().startsWith(KeepoBotChatTriggers.Commands),
     bot => {
         const commands = bot.events.map(e => e.id).join(', ');
         const commandIds = Object.values(KeepoBotChatTriggers).map(t => `"${t}"`).join(', ');

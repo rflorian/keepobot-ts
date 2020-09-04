@@ -9,8 +9,8 @@ export interface TwitchBot<B, C> {
     removeEvent: (event: TwitchBotEvent<B, string, C>) => this;
     events: TwitchBotEvent<B, string, C>[];
 
-    startTask: (task: TwitchBotTask<B, C>) => this;
-    stopTask: (task: TwitchBotTask<B, C>) => this;
+    addTask: (task: TwitchBotTask<B, C>) => this;
+    removeTask: (task: TwitchBotTask<B, C>) => this;
 
     uptime: number;
 }
