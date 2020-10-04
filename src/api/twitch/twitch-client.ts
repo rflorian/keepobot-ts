@@ -2,7 +2,7 @@ import {TwitchBotEventHandler} from '../events';
 import {TwitchUserState} from './twitch-user-state';
 
 export interface TwitchClient {
-    connect(): void;
+    connect(): Promise<[string, number]>;
 
     disconnect(): void;
 

@@ -18,10 +18,6 @@ export interface TwitchBotConfig {
                 intervalDuration: number // seconds
             }
         }
-    },
-    openWeather?: {
-        presentApi: string,
-        forecastApi: string
-    },
-    defaultEmote: string
+    };
+    defaultEmote: string;
 }

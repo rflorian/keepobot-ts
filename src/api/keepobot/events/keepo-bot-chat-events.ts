@@ -1,4 +1,4 @@
-export enum KeepoBotChatTriggers {
+export enum KeepoBotChatEvents {
     Commands = '!cmd',
     Kappa = 'Kappa',
     Shutdown = '!stop',

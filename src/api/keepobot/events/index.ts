@@ -1,1 +1,1 @@
-export * from './keepo-bot-chat-triggers';
+export * from './keepo-bot-chat-events';

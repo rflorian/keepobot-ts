@@ -27,8 +27,15 @@ export class KeepoBotIo {
 
     async start() {
         logger.debug('KeepoBotIo connecting...');
-        await this.twitchClient.connect();
-        logger.info('KeepoBotIo connected');
+
+        const [host, port] = await this.twitchClient
+            .connect()
+            .catch(e => {
+                logger.error('KeepoBotIo connection failed');
+                throw e;
+            });
+
+        logger.info(`KeepoBotIo connected on ${host}:${port}`);
     }
 
     async stop() {
